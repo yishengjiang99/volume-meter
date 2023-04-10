@@ -21,57 +21,67 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+import "./volume-meter.js";
 var audioContext = null;
 var meter = null;
 var canvasContext = null;
-var WIDTH=500;
-var HEIGHT=50;
+var WIDTH = 500;
+var HEIGHT = 50;
 var rafID = null;
 var mediaStreamSource = null;
 
-window.onload = function() {
+// window.onload = function () {
 
-    // grab our canvas
-	canvasContext = document.getElementById( "meter" ).getContext("2d");
-}
+//     // grab our canvas
+//     canvasContext = document.getElementById("meter").getContext("2d");
+// }
 
-function startMeter() {	
+function startMeter() {
     // grab an audio context
     audioContext = new AudioContext();
 
     // Attempt to get audio input
     navigator.mediaDevices.getUserMedia(
-    {
-        "audio": {
-            "mandatory": {
-                "googEchoCancellation": "false",
-                "googAutoGainControl": "false",
-                "googNoiseSuppression": "false",
-                "googHighpassFilter": "false"
+        {
+            "audio": {
+                "mandatory": {
+                    "googEchoCancellation": "false",
+                    "googAutoGainControl": "false",
+                    "googNoiseSuppression": "false",
+                    "googHighpassFilter": "false"
+                },
+                "optional": []
             },
-            "optional": []
-        },
-    }).then((stream) => {
-        // Create an AudioNode from the stream.
-        mediaStreamSource = audioContext.createMediaStreamSource(stream);
+        }).then((stream) => {
+            // Create an AudioNode from the stream.
+            mediaStreamSource = audioContext.createMediaStreamSource(stream);
 
-        // Create a new volume meter and connect it.
-        meter = createAudioMeter(audioContext);
-        mediaStreamSource.connect(meter);
+            // Create a new volume meter and connect it.
+            meter = createAudioMeter(audioContext);
+            mediaStreamSource.connect(meter);
 
-        // kick off the visual updating
-        drawLoop();
-    }).catch((err) => {
-        // always check for errors at the end.
-        console.error(`${err.name}: ${err.message}`);
-        alert('Stream generation failed.');
-    });
+            // kick off the visual updating
+            drawLoop();
+        }).catch((err) => {
+            // always check for errors at the end.
+            console.error(`${err.name}: ${err.message}`);
+            alert('Stream generation failed.');
+        });
 }
 
+export function drawLoops(canvas, _meter) {
+    meter = _meter;
+    var WIDTH = 500;
+    var HEIGHT = 50;
+    canvasContext = canvas.getContext('2d');
+    let rafID;
+    drawLoop(0);
+    return rafID;
+}
 
-function drawLoop( time ) {
+function drawLoop(time) {
     // clear the background
-    canvasContext.clearRect(0,0,WIDTH,HEIGHT);
+    canvasContext.clearRect(0, 0, WIDTH, HEIGHT);
 
     // check if we're currently clipping
     if (meter.checkClipping())
@@ -80,8 +90,8 @@ function drawLoop( time ) {
         canvasContext.fillStyle = "green";
 
     // draw a bar based on the current volume
-    canvasContext.fillRect(0, 0, meter.volume*WIDTH*1.4, HEIGHT);
+    canvasContext.fillRect(0, 0, meter.volume * WIDTH * 1.4, HEIGHT);
 
     // set up the next visual callback
-    rafID = window.requestAnimationFrame( drawLoop );
+    rafID = window.requestAnimationFrame(drawLoop);
 }
